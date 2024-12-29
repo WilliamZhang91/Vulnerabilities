@@ -1,0 +1,10 @@
+.csrf-page form label,
+.csrf-page form input {
+    display: block;
+    width: 200px;
+    height: 20px;
+}
+
+.csrf-page form div {
+    margin-bottom: 20px;
+}

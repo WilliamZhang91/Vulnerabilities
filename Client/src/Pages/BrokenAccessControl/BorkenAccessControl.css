@@ -1,0 +1,10 @@
+.broken-access-page form label,
+.csrf-page form input {
+    display: block;
+    width: 200px;
+    height: 20px;
+}
+
+.broken-access-page form div {
+    margin-bottom: 20px;
+}
