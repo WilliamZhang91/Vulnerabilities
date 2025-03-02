@@ -1,8 +1,6 @@
-using Azure.Core;
-using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Vulnerabilities.Data;
 using Vulnerabilities.Repositories.CommentRepository;
 using Vulnerabilities.Repositories.CreditCardRepository;
@@ -13,6 +11,9 @@ using Vulnerabilities.Services.CreditCardService;
 using Vulnerabilities.Services.EncryptionProvider;
 using Vulnerabilities.Services.ProfileService;
 using Vulnerabilities.Services.UserService;
+using System.Text;
+using Vulnerabilities.Services.TokenService;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -27,27 +28,32 @@ builder.Services.AddScoped<ICreditCardService, CreditCardService>();
 builder.Services.AddScoped<IEncryptionProvider, CustomEncryptionProvider>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Cookie.Name = "Session_Cookie";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.Cookie.SameSite = SameSiteMode.None;
-    });
-
-builder.Services.AddAntiforgery(options =>
-{
-    options.Cookie.Name = "__RequestVerificationToken";
-    options.HeaderName = "RequestVerificationToken";
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-});
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var validIssuer = jwtSection["ValidIssuer"];
+var validAudience = jwtSection["ValidAudience"];
+var issuerSigningKey = jwtSection["IssuerSigningKey"];
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = validIssuer,
+            ValidAudience = validAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection("Encryption"));
 
@@ -67,45 +73,6 @@ app.UseCors(options =>
     .AllowAnyMethod()
     .AllowCredentials());
 
-var antiforgery = app.Services.GetRequiredService<IAntiforgery>();
-
-//app.Use(async (context, next) =>
-//{
-//    if (context.Request.Method == HttpMethods.Post &&
-//        !context.Request.Path.StartsWithSegments("/api/auth/login"))
-//    {
-//        var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
-//        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-
-//        try
-//        {
-//            await antiforgery.ValidateRequestAsync(context);
-
-//        }
-//        catch (AntiforgeryValidationException ex)
-//        {
-//            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-//            var userClaims = context.User?.Claims.Select(c => new { c.Type, c.Value }).ToList();
-//            logger.LogError("Antiforgery token validation failed. User Claims: {Claims}", userClaims);
-//            logger.LogError(ex.ToString());
-//            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-//            await context.Response.WriteAsync("Invalid antiforgery token.");
-//            var errorMessage = new
-//            {
-//                Error = "Antiforgery token validation failed.",
-//                InnerException = ex.InnerException?.Message
-//            };
-
-//            var jsonResponse = System.Text.Json.JsonSerializer.Serialize(errorMessage);
-
-//            await context.Response.WriteAsync(jsonResponse);
-//            return;
-//        }
-
-//        await next();
-//    }
-//});
-
 using (var scope = app.Services.CreateScope())
 {
     //replace DataContext with your Db Context name
@@ -121,32 +88,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path.StartsWithSegments("/api/auth/login"))
-    {
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        var tokens = antiforgery.GetAndStoreTokens(context);
-        context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken, new CookieOptions
-        {
-            HttpOnly = false,
-            SameSite = SameSiteMode.None,
-            Secure = true
-        });
-    }
-    await next();
-});
-
-app.Use(async (context, next) =>
-{
-    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-    var tokenFromHeader = context.Request.Headers["RequestVerificationToken"].FirstOrDefault();
-    logger.LogInformation("Token from Header: {TokenFromHeader}", tokenFromHeader);
-    var tokenFromCookie = context.Request.Cookies["__RequestVerificationToken"];
-    logger.LogInformation("Token from Cookie: {TokenFromCookie}", tokenFromCookie);
-    await next();
-});
 
 app.MapControllers();
 

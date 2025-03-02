@@ -22,7 +22,8 @@ interface TabPanelProps {
 
 interface Props {
     isAuthenticated: boolean,
-    csrfToken: string,
+    setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>,
+    token: string,
 }
 
 const tabStyles: CSSProperties = {
@@ -57,10 +58,11 @@ function a11yProps(index: number) {
     };
 }
 
-const FullWidthTabs: React.FC<Props> = ({ isAuthenticated, csrfToken }): JSX.Element => {
+const FullWidthTabs: React.FC<Props> = ({ isAuthenticated, setIsAuthenticated, token }): JSX.Element => {
     const theme = useTheme();
     const [value, setValue] = React.useState<number>(0);
     const [queryResults, setQueryResults] = React.useState<string>("");
+    const [errorMessage, setErrorMessage] = React.useState<string>("");
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -95,10 +97,10 @@ const FullWidthTabs: React.FC<Props> = ({ isAuthenticated, csrfToken }): JSX.Ele
                     onChangeIndex={handleChangeIndex}
                 >
                     <TabPanel value={value} index={0} dir={theme.direction}>
-                        <CrossSiteScripting />
+                        <CrossSiteScripting isAuthenticated={isAuthenticated} token={token} />
                     </TabPanel>
                     <TabPanel value={value} index={1} dir={theme.direction}>
-                        <OsCommandInjection queryResults={queryResults} setQueryResults={setQueryResults} csrfToken={csrfToken} />
+                        <OsCommandInjection queryResults={queryResults} setQueryResults={setQueryResults} token={token} />
                     </TabPanel>
                     <TabPanel value={value} index={2} dir={theme.direction}>
                         <SqlInjection />
@@ -111,7 +113,7 @@ const FullWidthTabs: React.FC<Props> = ({ isAuthenticated, csrfToken }): JSX.Ele
                     </TabPanel>
                 </SwipeableViews>
             </Box>
-            {isAuthenticated && <SignOutButton />}
+            {isAuthenticated && <SignOutButton setIsAuthenticated={setIsAuthenticated} setErrorMessage={setErrorMessage} />}
         </>
     );
 };

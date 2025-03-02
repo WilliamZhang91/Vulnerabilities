@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Vulnerabilities.Dtos;
 using Vulnerabilities.Services.UserService;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Vulnerabilities.Services.TokenService;
 
 namespace Vulnerabilities.Controllers
 {
@@ -14,17 +15,21 @@ namespace Vulnerabilities.Controllers
     {
         private readonly IUserService _userService;
         private readonly ILogger<AuthController> _logger;
-        private readonly IAntiforgery _antiforgery;
+        private readonly ITokenService _tokenService;
 
-        public AuthController(IUserService userService, ILogger<AuthController> logger, IAntiforgery antiforgery)
+        public AuthController(
+            IUserService userService, 
+            ILogger<AuthController> logger,
+            ITokenService tokenService
+            )
         {
             _userService = userService;
             _logger = logger;
-            _antiforgery = antiforgery;
+            _tokenService = tokenService;
+            
         }
 
         [HttpPost("Login")]
-        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Login([FromBody] LoginUserDto login)
         {
             var loginResult = await _userService.LoginUserAsync(login);
@@ -33,32 +38,15 @@ namespace Vulnerabilities.Controllers
             {
                 try
                 {
-                    var claims = new[]
-                    {
-                        new Claim(ClaimTypes.Name, loginResult.Username),
-                        new Claim(ClaimTypes.Authentication, loginResult.Status),
-                        new Claim(ClaimTypes.Role, loginResult.Role),
-                    };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-                    var tokens = _antiforgery.GetAndStoreTokens(HttpContext);
-
-                    Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken, new CookieOptions
-                    {
-                        HttpOnly = false,
-                        SameSite = SameSiteMode.None,
-                        Secure = true
-                    });
+                    var jwtToken = _tokenService.GenerateJwtToken(loginResult.Id);
 
                     var response = new LoginResponseDto
                     {
-                        id = loginResult.id,
                         Username = loginResult.Username,
                         Role = loginResult.Role,
                         StatusCode = loginResult.StatusCode,
-                        Status = loginResult.Status
+                        Status = loginResult.Status,
+                        access_token = jwtToken
                     };
 
                     return Ok(response);
@@ -78,21 +66,9 @@ namespace Vulnerabilities.Controllers
         public async Task<IActionResult> LoginAdmin()
         {
             var loggedIn = true;
-            var id = 3;
-            var username = "username";
-            var role = "admin";
 
             if (loggedIn)
             {
-                var claims = new[]
-                {
-                    new Claim("id", id.ToString()),
-                    new Claim("username", username),
-                    new Claim(ClaimTypes.Role, role)
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
                 return Ok(new
                 {
@@ -102,6 +78,13 @@ namespace Vulnerabilities.Controllers
             }
 
             return Unauthorized();
+        }
+
+        [HttpPost("Logout")]
+        public IActionResult Logout()
+        {
+
+            return Ok(new { Message = "Logged out successfully" });
         }
     }
 }

@@ -43,6 +43,7 @@ namespace Vulnerabilities.Repositories.UserRepository
 
             return new LoginResponseDto
             {
+                Id = user.Id,
                 Username = loginUserDto.Username,
                 Role = "user",
                 Status = "Login Successful",

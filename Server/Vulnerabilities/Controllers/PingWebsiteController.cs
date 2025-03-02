@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Antiforgery;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -17,76 +17,56 @@ namespace Vulnerabilities.Controllers
             _logger = logger;
         }
 
+
         [HttpPost("ping")]
+        [Authorize]
         public async Task<IActionResult> PingVulnerable([FromBody] string request)
         {
-            if (User.Identity.IsAuthenticated)
+
+            if (string.IsNullOrEmpty(request))
             {
-                var antiforgery = HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
-                antiforgery.ValidateRequestAsync(HttpContext).GetAwaiter().GetResult();
+                return BadRequest("Command is required.");
+            }
 
-                if (string.IsNullOrEmpty(request))
+            try
+            {
+                _logger.LogInformation(request);
+
+                var startInfo = new ProcessStartInfo
                 {
-                    return BadRequest("Command is required.");
-                }
+                    FileName = "cmd.exe",
+                    Arguments = $"/c ping {request}",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
 
-                try
+                using (var process = new Process { StartInfo = startInfo })
                 {
-                    _logger.LogInformation(request);
+                    process.Start();
 
-                    var startInfo = new ProcessStartInfo
+                    var output = await process.StandardOutput.ReadToEndAsync();
+                    var error = await process.StandardError.ReadToEndAsync();
+
+                    process.WaitForExit();
+
+                    if (!string.IsNullOrEmpty(error))
                     {
-                        FileName = "cmd.exe",
-                        Arguments = $"/c ping {request}",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    using (var process = new Process { StartInfo = startInfo })
-                    {
-                        process.Start();
-
-                        var output = await process.StandardOutput.ReadToEndAsync();
-                        var error = await process.StandardError.ReadToEndAsync();
-
-                        process.WaitForExit();
-
-                        if (!string.IsNullOrEmpty(error))
-                        {
-                            return Ok(new { Output = error });
-                        }
-
-                        return Ok(new { Output = output });
+                        return Ok(new { Output = error });
                     }
-                }
-                catch (AntiforgeryValidationException ex)
-                {
-                    var headersDictionary = Request.Headers.ToDictionary(
-                        h => h.Key,
-                        h => h.Value.ToString()
-                    );
 
-                    var errorResponse = new
-                    {
-                        Error = ex.Message,
-                        InnerException = ex.InnerException,
-                        Headers = headersDictionary,
-                    };
-
-                    return StatusCode(500, errorResponse);
+                    return Ok(new { Output = output });
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return Unauthorized();
+                return StatusCode(500, new
+                {
+                    Error = "Something went wrong"
+                });
             }
-        }
-
-        public class CommandRequest
-        {
-            public string Command { get; set; } = string.Empty;
-        }
+        } 
     }
 }
+

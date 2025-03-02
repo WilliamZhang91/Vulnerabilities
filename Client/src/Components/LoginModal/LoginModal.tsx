@@ -32,7 +32,7 @@ const input: CSSProperties = {
 interface Props {
     isAuthenticated: boolean,
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>,
-    setCsrfToken: React.Dispatch<React.SetStateAction<string>>,
+    setToken: React.Dispatch<React.SetStateAction<string>>,
 };
 
 interface LoginCredentials {
@@ -46,14 +46,15 @@ interface LoginResponse {
     role: string,
     statusCode: number,
     status: string,
-    csrfToken: string,
+    access_token: string | null,
+    refresh_token: string | null,
 }
 
 const baseUrl: string = config.baseUrl;
 const path: string = "Auth/Login";
 const url: string = `${baseUrl}/${path}`
 
-const LoginModal: React.FC<Props> = ({ isAuthenticated, setIsAuthenticated, setCsrfToken }): JSX.Element => {
+const LoginModal: React.FC<Props> = ({ isAuthenticated, setIsAuthenticated, setToken }): JSX.Element => {
     const [open, setOpen] = useState<boolean>(true);
     const [checked, setChecked] = useState<boolean>(true);
     const handleOpen = (): void => setOpen(true);
@@ -88,15 +89,17 @@ const LoginModal: React.FC<Props> = ({ isAuthenticated, setIsAuthenticated, setC
             });
 
             const data: LoginResponse = await response.json();
-
-            console.log({ statusCode: data.statusCode });
+            console.log({ data });
 
             if (data.statusCode === 200) {
                 setIsAuthenticated(true);
-                const csrfToken = getFromCookie("XSRF-TOKEN");
-                if (csrfToken) {
+                // const token = getFromCookie("XSRF-TOKEN");
+                // const token = getFromCookie("__RequestVerificationToken");
+                const jwtToken = data.access_token;
+                console.log({ jwtToken })
+                if (jwtToken) {
                     setIsAuthenticated(true);
-                    setCsrfToken(csrfToken);
+                    setToken(jwtToken);
                 } else {
                     setErrorMessage("Could not generate token");
                 }

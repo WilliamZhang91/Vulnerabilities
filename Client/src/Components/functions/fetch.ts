@@ -1,18 +1,14 @@
 import config from "../../config";
 
-interface FetchRequestResult {
-    [key: string]: string;
-};
-
 const baseUrl: string = config.baseUrl;
 
 export const fetchRequest = async (
     path: string,
     method: string,
-    csrfToken: string | null,
+    token: string | null,
     setErrorMessage: React.Dispatch<React.SetStateAction<string>>,
     body?: any
-): Promise<FetchRequestResult> => {
+): Promise<any> => {
     try {
         setErrorMessage("");
 
@@ -20,14 +16,13 @@ export const fetchRequest = async (
             'Content-Type': "application/json",
         };
 
-        if (csrfToken) {
-            headers['RequestVerificationToken'] = csrfToken;
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
         }
 
         const options: RequestInit = {
             method,
             headers,
-            credentials: "include",
         };
 
         if (method === "POST" && body) {

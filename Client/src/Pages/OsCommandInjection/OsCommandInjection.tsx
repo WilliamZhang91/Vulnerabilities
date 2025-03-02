@@ -8,10 +8,10 @@ import { form } from "../../Components/Styling/MuiComponentsStyling";
 interface Props {
     queryResults: string,
     setQueryResults: React.Dispatch<React.SetStateAction<string>>,
-    csrfToken: string
+    token: string
 }
 
-const OsCommandInjection: React.FC<Props> = ({ queryResults, setQueryResults, csrfToken }): JSX.Element => {
+const OsCommandInjection: React.FC<Props> = ({ queryResults, setQueryResults, token }): JSX.Element => {
 
     const [inputValue, setInputValue] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,7 +26,13 @@ const OsCommandInjection: React.FC<Props> = ({ queryResults, setQueryResults, cs
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await fetchRequest("PingWebsite/ping", "POST", csrfToken, setErrorMessage, inputValue);
+            const response = await fetchRequest(
+                "PingWebsite/ping",
+                "POST",
+                token,
+                setErrorMessage,
+                inputValue
+            );
             setQueryResults(response.output)
         } catch (err: any) {
             console.error(err);
@@ -57,7 +63,7 @@ const OsCommandInjection: React.FC<Props> = ({ queryResults, setQueryResults, cs
         >
             Search
         </Button>
-        <div style={{marginTop: "20px"}}>
+        <div style={{ marginTop: "20px" }}>
             {isLoading && <div>Retrieving...</div>}
             {errorMessage && <div>{errorMessage}</div>}
             {queryResults ? <Results results={queryResults} /> : null}

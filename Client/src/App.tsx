@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import FullWidthTabs from './Components/Tabs/FullWidthTabs';
 import LoginModal from './Components/LoginModal/LoginModal';
@@ -6,16 +6,24 @@ import LoginModal from './Components/LoginModal/LoginModal';
 function App() {
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [csrfToken, setCsrfToken] = useState<string>("");
+  const [token, setToken] = useState<string>("");
+
+  useEffect(() => {
+    console.log(token)
+  }, [token])
 
   return (
     <div className="App">
       <LoginModal
         isAuthenticated={isAuthenticated}
         setIsAuthenticated={setIsAuthenticated}
-        setCsrfToken={setCsrfToken}
+        setToken={setToken}
       />
-      <FullWidthTabs isAuthenticated={isAuthenticated} csrfToken={csrfToken} />
+      <FullWidthTabs
+        isAuthenticated={isAuthenticated}
+        setIsAuthenticated={setIsAuthenticated}
+        token={token}
+      />
     </div>
   );
 }
