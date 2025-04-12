@@ -20,8 +20,22 @@ namespace Vulnerabilities.Controllers
             _logger = logger;
         }
 
-        [HttpGet("Search")]
+        [HttpGet("Search/Vulnerable")]
         public async Task<IActionResult> ReadProfileVulnerable([FromQuery] string searchValue)
+        {
+            try
+            {
+                var profile = await _profileService.ReadProfileVulnerableAsync(searchValue);
+                return Ok(profile);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong: " + ex.Message);
+            }
+        }
+
+        [HttpGet("Search/Invulnerable")]
+        public async Task<IActionResult> ReadProfileInvulnerable([FromQuery] string searchValue)
         {
             try
             {

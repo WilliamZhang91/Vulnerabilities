@@ -7,5 +7,6 @@ namespace Vulnerabilities.Repositories.CommentRepository
     {
         public Task<List<CommentResponseDto>> GetCommentsById(int id);
         public Task<Comment> CreateComment(CreateCommentDto comment);
+        public int UpdateComment(int number);   
     }
 }

@@ -1,5 +1,5 @@
 import { Avatar, Box, Button, Divider, Grid, Paper, TextField, Typography } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { fetchRequest } from '../../Components/functions/fetch';
 import { dateFormatter } from '../../Components/functions/dateFormatter';
 
@@ -19,6 +19,8 @@ const CrossSiteScripting: React.FC<Props> = ({ isAuthenticated, token }): JSX.El
     const [commentToSubmit, setCommentToSubmit] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
 
+    const commentRefs = useRef<(HTMLDivElement | null)[]>([]);
+
     const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
         setCommentToSubmit(e.target.value);
     }
@@ -26,7 +28,7 @@ const CrossSiteScripting: React.FC<Props> = ({ isAuthenticated, token }): JSX.El
     const submitComment = async (): Promise<void> => {
         setErrorMessage("");
         try {
-            const response = await fetchRequest("Comment", "POST", null, setErrorMessage, commentToSubmit);
+            await fetchRequest("Comment", "POST", token, setErrorMessage, commentToSubmit);
             await retrieveComments();
         } catch (err: any) {
             console.error(err);
@@ -45,10 +47,34 @@ const CrossSiteScripting: React.FC<Props> = ({ isAuthenticated, token }): JSX.El
     }
 
     useEffect(() => {
-        (async () => {
-            retrieveComments();
-        })();
+        if (isAuthenticated === true) {
+            (async () => {
+                retrieveComments();
+            })();
+        }
+
+        if (isAuthenticated === false) {
+            setComments([]);
+        }
     }, [isAuthenticated]);
+
+    useEffect(() => {
+        commentRefs.current.forEach((el, i) => {
+            if (el && comments[i]?.commentText) {
+                // Inject the HTML content
+                el.innerHTML = comments[i].commentText;
+
+                // Manually execute any scripts in the innerHTML
+                const scripts = el.getElementsByTagName("script");
+                Array.from(scripts).forEach((script) => {
+                    const newScript = document.createElement("script");
+                    newScript.textContent = script.innerHTML;
+                    document.body.appendChild(newScript);
+                    document.body.removeChild(newScript);
+                });
+            }
+        });
+    }, [comments]);
 
 
     return <div className="cross-site-scripting">
@@ -90,7 +116,9 @@ const CrossSiteScripting: React.FC<Props> = ({ isAuthenticated, token }): JSX.El
                             </Grid>
                             <Grid justifyContent="left" item xs zeroMinWidth>
                                 <h4 style={{ textAlign: "left" }}>User</h4>
-                                <p>{c.commentText}</p>
+                                <p ref={(el) => commentRefs.current[i] = el}>
+                                    {c.commentText}
+                                </p>
                                 <p style={{ textAlign: "left", color: "gray" }}>
                                     {dateFormatter(c.createdAt)}
                                 </p>

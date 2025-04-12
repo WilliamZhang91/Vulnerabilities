@@ -23,7 +23,6 @@ namespace Vulnerabilities.Repositories.UserRepository
 
             if (user == null)
             {
-                _logger.LogInformation("User not found");
                 return new LoginResponseDto
                 {
                     Status = "User not found",
@@ -33,7 +32,6 @@ namespace Vulnerabilities.Repositories.UserRepository
 
             if (user.Password != loginUserDto.Password)
             {
-                _logger.LogInformation("Incorrect password");
                 return new LoginResponseDto
                 {
                     Status = "Incorrect Password",
@@ -45,11 +43,10 @@ namespace Vulnerabilities.Repositories.UserRepository
             {
                 Id = user.Id,
                 Username = loginUserDto.Username,
-                Role = "user",
+                Role = user.Role,
                 Status = "Login Successful",
                 StatusCode = StatusCodes.Status200OK
-            };
-            
+            };   
         }
 
         public async Task<CreateUserDto> CreateUserAsync(CreateUserDto user) 

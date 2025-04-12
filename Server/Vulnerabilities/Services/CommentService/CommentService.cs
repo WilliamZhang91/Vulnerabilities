@@ -7,10 +7,12 @@ namespace Vulnerabilities.Services.CommentService
     public class CommentService : ICommentService
     {
         private readonly ICommentRepository _commentRepository;
+        private readonly ILogger<ICommentService> _logger;
 
-        public CommentService(ICommentRepository commentRepository)
+        public CommentService(ICommentRepository commentRepository, ILogger<ICommentService> logger)
         {
             _commentRepository = commentRepository;
+            _logger = logger;
         }
 
         public async Task<List<CommentResponseDto>> GetCommentsById(int id)
@@ -36,6 +38,19 @@ namespace Vulnerabilities.Services.CommentService
             catch 
             {
                 throw;
+            }
+        }
+
+        public void UpdateComment(int number)
+        {
+            try
+            {
+                _commentRepository.UpdateComment(number);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("error thrown");
+                throw new Exception(ex.Message);
             }
         }
     }

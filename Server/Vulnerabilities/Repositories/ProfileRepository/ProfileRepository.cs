@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Vulnerabilities.Data;
 using Vulnerabilities.Dtos;
 using Vulnerabilities.Models;
@@ -24,14 +25,31 @@ namespace Vulnerabilities.Repositories.ProfileRepository
             return profile;
         }
 
-        public async Task<List<ProfileResponseDto?>> ReadProfileAsync(string searchValue)
+        public async Task<List<ProfileResponseDto?>> ReadProfileVulnerableAsync(string searchValue)
         {
             var query = $"SELECT * FROM Profiles WHERE Name LIKE '%{searchValue}%'";
-            _logger.LogInformation(query);
 
             var profiles = await _context.Profiles
                 .FromSqlRaw(query)
                 .ToListAsync();
+
+            var profileDtos = profiles.Select(profile => new ProfileResponseDto
+            {
+                Name = profile.Name,
+                Email = profile.Email,
+                Address = profile.Address
+            }).ToList();
+
+            return profileDtos;
+        }
+
+        public async Task<List<ProfileResponseDto?>> ReadProfileAsync(string searchValue)
+        {
+            var query = "SELECT * FROM Profiles WHERE Name LIKE @searchValue";
+            var profiles = await _context.Profiles
+                .FromSqlRaw(query, new SqlParameter("@searchValue", "%" + searchValue + "%"))
+                .ToListAsync();
+
 
             var profileDtos = profiles.Select(profile => new ProfileResponseDto
             {
@@ -50,7 +68,7 @@ namespace Vulnerabilities.Repositories.ProfileRepository
 
             if (profileToUpdate == null)
             {
-                throw new KeyNotFoundException($"Profile with ID {id} not found."); // Or return null, based on your preference
+                throw new KeyNotFoundException($"Profile with ID {id} not found."); 
             }
 
             if (!string.IsNullOrEmpty(profileDto.Name)) profileToUpdate.Name = profileDto.Name;

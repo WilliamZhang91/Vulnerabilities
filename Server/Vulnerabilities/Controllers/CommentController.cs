@@ -10,7 +10,7 @@ namespace Vulnerabilities.Controllers
     public class CommentController : Controller
     {
         private readonly ICommentService _commentService;
-        private readonly ILogger<CommentController> _logger;    
+        private readonly ILogger<CommentController> _logger;
 
         public CommentController(ICommentService commentService, ILogger<CommentController> logger)
         {
@@ -36,7 +36,7 @@ namespace Vulnerabilities.Controllers
                 {
                     return BadRequest("Invalid or missing id");
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -45,11 +45,13 @@ namespace Vulnerabilities.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateComment([FromBody] string commentText)
         {
             try
             {
-                var idClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+                var idClaim = User.FindFirst("UserId")?.Value;
+                _logger.LogInformation(idClaim);
                 if (int.TryParse(idClaim, out var id))
                 {
 
@@ -78,6 +80,28 @@ namespace Vulnerabilities.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPost("Update")]
+        public IActionResult UpdateCommnet()
+        {
+            int number = 0;
+
+            try
+            {
+                _commentService.UpdateComment(number);
+                return Ok("Comment updated successfully");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError($"Error InvalidOperationException: {ex.Message}");
+                return StatusCode(500, new { InvalidOperationException = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unexpected error: {ex.Message}");
+                return StatusCode(500, new { GeneralException = ex.Message });
             }
         }
     }

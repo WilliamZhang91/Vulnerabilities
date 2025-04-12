@@ -15,6 +15,20 @@ namespace Vulnerabilities.Services.ProfileService
             _profileRepository = profileRepository;
         }
 
+        public async Task<List<ProfileResponseDto?>> ReadProfileVulnerableAsync(string searchValue)
+        {
+            try
+            {
+                var profile = await _profileRepository.ReadProfileVulnerableAsync(searchValue);
+
+                return profile;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
         public async Task<List<ProfileResponseDto?>> ReadProfileAsync(string searchValue)
         {
             try

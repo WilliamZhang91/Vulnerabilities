@@ -12,8 +12,8 @@ const SignOutButton:React.FC<Props> = ({
     setErrorMessage
 }) => {
 
-    const signOff = async (): Promise<void> => {
-        await logout(setIsAuthenticated, setErrorMessage);
+    const signOff = (): void => {
+        setIsAuthenticated(false);
     }
 
     return (

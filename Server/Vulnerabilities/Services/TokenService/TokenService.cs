@@ -14,11 +14,12 @@ namespace Vulnerabilities.Services.TokenService
             _configuration = configuration;
         }
 
-        public string GenerateJwtToken(int id)
+        public string GenerateJwtToken(int id, string role)
         {
             var claims = new[]
             {
-                new Claim("UserId", id.ToString())
+                new Claim("UserId", id.ToString()),
+                new Claim(ClaimTypes.Role, role)
             };
 
             var validIssuer = _configuration["Jwt:ValidIssuer"];
@@ -36,6 +37,5 @@ namespace Vulnerabilities.Services.TokenService
 
             return new JwtSecurityTokenHandler().WriteToken(jwtToken);
         }
-
     }
 }

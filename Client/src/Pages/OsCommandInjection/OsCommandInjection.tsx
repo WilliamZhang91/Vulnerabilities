@@ -21,21 +21,31 @@ const OsCommandInjection: React.FC<Props> = ({ queryResults, setQueryResults, to
         setInputValue(e.target.value);
     };
 
-    const submitForm = async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>): Promise<any> => {
+    const submitForm = async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, isVulnerable: boolean): Promise<any> => {
+        
         setQueryResults("");
         e.preventDefault();
         setIsLoading(true);
+
+        if (!inputValue) {
+            setQueryResults("Enter a valid query");
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const response = await fetchRequest(
-                "PingWebsite/ping",
+                isVulnerable? "PingWebsite/ping/vulnerable" : "PingWebsite/ping/invulnerable",
                 "POST",
                 token,
                 setErrorMessage,
                 inputValue
             );
-            setQueryResults(response.output)
+            console.log(response.output)
+            setQueryResults(response.output);
         } catch (err: any) {
-            console.error(err);
+            setErrorMessage(err.message)
+            return;
         } finally {
             setIsLoading(false);
         }
@@ -59,9 +69,17 @@ const OsCommandInjection: React.FC<Props> = ({ queryResults, setQueryResults, to
             variant="contained"
             size="large"
             style={{ margin: "20px 10px 0 0" }}
-            onClick={submitForm}
+            onClick={(e) => submitForm(e, true)}
         >
-            Search
+            Unsafe search
+        </Button>
+        <Button
+            variant="contained"
+            size="large"
+            style={{ margin: "20px 10px 0 0" }}
+            onClick={(e) => submitForm(e, false)}
+        >
+            Safe search
         </Button>
         <div style={{ marginTop: "20px" }}>
             {isLoading && <div>Retrieving...</div>}

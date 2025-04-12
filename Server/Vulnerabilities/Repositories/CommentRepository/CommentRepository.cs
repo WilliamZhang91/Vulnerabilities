@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Vulnerabilities.Data;
 using Vulnerabilities.Dtos;
 using Vulnerabilities.Models;
@@ -45,5 +46,20 @@ namespace Vulnerabilities.Repositories.CommentRepository
 
             return comment;
         }
+
+        public int UpdateComment(int number)
+        {
+            try
+            {
+                throw new InvalidOperationException("Something went wrong in the try block.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidOperationException(ex.Message);
+            }
+            
+        }
+
+
     }
 }

@@ -9,8 +9,8 @@ const input: CSSProperties = {
 };
 
 const tableHeading: CSSProperties = {
-    fontSize: '1.2rem', 
-    fontWeight: 'bold', 
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
 };
 
 interface Response {
@@ -20,12 +20,12 @@ interface Response {
 };
 
 const baseUrl: string = config.baseUrl;
-const path: string = "Profile/Search";
-const url: string = `${baseUrl}/${path}`
+const pathVulnerable: string = "Profile/Search/Vulnerable";
+const pathInvulnerable: string = "Profile/Search/Invulnerable";
+const urlVulnerable: string = `${baseUrl}/${pathVulnerable}`;
+const urlInvulnerable: string = `${baseUrl}/${pathInvulnerable}`
 
 const SqlInjection: React.FC = (): JSX.Element => {
-
-    //Be able to view profile after selecting
 
     const [searchValue, setSearchValue] = useState<string>("");
     const [searchResults, setSearchResults] = useState<Response[]>([]);
@@ -36,22 +36,22 @@ const SqlInjection: React.FC = (): JSX.Element => {
         setSearchValue(value);
     };
 
-    const searchUser = async (): Promise<void> => {
+    const searchUser = async (isVulnerable: boolean): Promise<void> => {
         setErrorMessage("");
         setSearchResults([]);
 
         try {
-            const response = await fetch(`${url}?searchValue=${encodeURIComponent(searchValue)}`);
-            console.log({ response })
-
+            const response = await fetch(`${isVulnerable? urlVulnerable : urlInvulnerable}?searchValue=${encodeURIComponent(searchValue)}`);
             if (response.status === 200) {
                 const data = await response.json();
-                console.log({ data })
+                console.log(data);
                 if (data.length > 0) {
                     setSearchResults(data);
+                } else {
+                    setErrorMessage("No results found");
                 }
             } else {
-                setErrorMessage("Server error");
+                setErrorMessage(response.status.toString() + " error");
             }
         } catch (err) {
             console.error(err);
@@ -77,9 +77,17 @@ const SqlInjection: React.FC = (): JSX.Element => {
             variant="contained"
             size="large"
             style={{ margin: "20px 10px 0 0" }}
-            onClick={searchUser}
+            onClick={() => searchUser(true)}
         >
-            Search
+            Unsafe search
+        </Button>
+        <Button
+            variant="contained"
+            size="large"
+            style={{ margin: "20px 10px 0 0" }}
+            onClick={() => searchUser(false)}
+        >
+            Safe search
         </Button>
         <div style={{ marginTop: "50px" }}>
             {searchResults.length > 0 && <TableContainer component={Paper}>

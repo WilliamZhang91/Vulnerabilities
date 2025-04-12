@@ -6,6 +6,7 @@ namespace Vulnerabilities.Repositories.ProfileRepository
 {
     public interface IProfileRepository
     {
+        Task<List<ProfileResponseDto?>> ReadProfileVulnerableAsync(string searchValue);
         Task<List<ProfileResponseDto?>> ReadProfileAsync(string searchValue);
         Task<Profile> CreateProfileAsync(Profile profile);
         Task<Profile> UpdateProfileAsync(int id, UpdateProfileDto updateProfileDto);

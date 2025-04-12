@@ -7,5 +7,6 @@ namespace Vulnerabilities.Services.CommentService
     {
         Task<List<CommentResponseDto>> GetCommentsById(int id);
         Task<Comment> CreateComment(CreateCommentDto createCommentDto);
+        void UpdateComment(int number);
     }
 }

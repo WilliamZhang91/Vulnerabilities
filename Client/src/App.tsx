@@ -10,7 +10,7 @@ function App() {
 
   useEffect(() => {
     console.log(token)
-  }, [token])
+  }, [token]);
 
   return (
     <div className="App">

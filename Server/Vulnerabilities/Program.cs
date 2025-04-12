@@ -13,7 +13,7 @@ using Vulnerabilities.Services.ProfileService;
 using Vulnerabilities.Services.UserService;
 using System.Text;
 using Vulnerabilities.Services.TokenService;
-
+using Vulnerabilities.Services.AuthService;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -29,6 +29,7 @@ builder.Services.AddScoped<IEncryptionProvider, CustomEncryptionProvider>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -52,6 +53,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey))
         };
     });
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("")
+//})
 
 builder.Services.AddAuthorization();
 
