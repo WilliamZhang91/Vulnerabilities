@@ -17,61 +17,41 @@ namespace Vulnerabilities.Services.ProfileService
 
         public async Task<List<ProfileResponseDto?>> ReadProfileVulnerableAsync(string searchValue)
         {
-            try
-            {
-                var profile = await _profileRepository.ReadProfileVulnerableAsync(searchValue);
 
-                return profile;
-            }
-            catch
-            {
-                throw;
-            }
+            var profile = await _profileRepository.ReadProfileVulnerableAsync(searchValue);
+
+            return profile;
         }
 
         public async Task<List<ProfileResponseDto?>> ReadProfileAsync(string searchValue)
         {
-            try
-            {
-                var profile = await _profileRepository.ReadProfileAsync(searchValue);
 
-                return profile;
-            }
-            catch
-            {
-                throw;
-            }
+            var profile = await _profileRepository.ReadProfileAsync(searchValue);
+
+            return profile;
+
+
         }
 
         public async Task<Profile> CreateProfileAsync(Profile profile)
         {
-            try
-            {
-                if (profile == null)
-                {
-                    throw new ArgumentNullException(nameof(profile), "Profile cannot be null.");
-                }
 
-                var createdProfile = await _profileRepository.CreateProfileAsync(profile);
-                return createdProfile;
-            }
-            catch (Exception ex)
+            if (profile == null)
             {
-                throw; 
+                throw new ArgumentNullException(nameof(profile), "Profile cannot be null.");
             }
+
+            var createdProfile = await _profileRepository.CreateProfileAsync(profile);
+            return createdProfile;
+
         }
 
         public async Task<Profile> UpdateProfileAsync(int id, UpdateProfileDto updateProfileDto)
         {
-            try
-            {
-                var profileToUpdate = await _profileRepository.UpdateProfileAsync(id, updateProfileDto);
-                return profileToUpdate;
-            }
-            catch (Exception ex) 
-            { 
-                throw; 
-            }
+
+            var profileToUpdate = await _profileRepository.UpdateProfileAsync(id, updateProfileDto);
+            return profileToUpdate;
+
         }
     }
 }

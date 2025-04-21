@@ -17,41 +17,20 @@ namespace Vulnerabilities.Services.CommentService
 
         public async Task<List<CommentResponseDto>> GetCommentsById(int id)
         {
-            try
-            {
-                var comments = await _commentRepository.GetCommentsById(id);
-                return comments;
-            }
-            catch
-            {
-                throw;
-            }
+            var comments = await _commentRepository.GetCommentsById(id);
+            return comments;
         }
 
         public async Task<Comment> CreateComment(CreateCommentDto createCommentDto)
         {
-            try
-            {
-                var newComment = await _commentRepository.CreateComment(createCommentDto);
-                return newComment;
-            }
-            catch 
-            {
-                throw;
-            }
+
+            var newComment = await _commentRepository.CreateComment(createCommentDto);
+            return newComment;
         }
 
         public void UpdateComment(int number)
         {
-            try
-            {
-                _commentRepository.UpdateComment(number);
-            }
-            catch (Exception ex) 
-            {
-                _logger.LogError("error thrown");
-                throw new Exception(ex.Message);
-            }
+            _commentRepository.UpdateComment(number);
         }
     }
 }

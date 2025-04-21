@@ -4,10 +4,10 @@ using Vulnerabilities.Repositories.CreditCardRepository;
 
 namespace Vulnerabilities.Services.CreditCardService
 {
-    public class CreditCardService: ICreditCardService
+    public class CreditCardService : ICreditCardService
     {
         private readonly ICreditCardRepository _creditCardRepository;
-        private readonly ILogger<ICreditCardService> _logger;   
+        private readonly ILogger<ICreditCardService> _logger;
 
         public CreditCardService(ICreditCardRepository creditCardRepository, ILogger<ICreditCardService> logger)
         {
@@ -17,29 +17,14 @@ namespace Vulnerabilities.Services.CreditCardService
 
         public async Task<List<CreditCard>> GetCreditCardsAsync(int profileId)
         {
-            try
-            {
-                var crediCards = await _creditCardRepository.GetAllCreditCardsAsync(profileId);
-                return crediCards;
-            }
-            catch
-            {
-                throw;
-            }
+            var crediCards = await _creditCardRepository.GetAllCreditCardsAsync(profileId);
+            return crediCards;
         }
 
         public async Task<CreditCard> CreateCreditCardAsync(CreateCreditCardDto creditCardDto)
         {
-            try
-            {
-                var createdCreditCard = await _creditCardRepository.CreateCreditCardAsync(creditCardDto);
-                return createdCreditCard;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogInformation(ex.InnerException?.ToString());
-                throw;
-            }
+            var createdCreditCard = await _creditCardRepository.CreateCreditCardAsync(creditCardDto);
+            return createdCreditCard;
         }
     }
 }
